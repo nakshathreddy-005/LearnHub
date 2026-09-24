@@ -1,0 +1,2 @@
+const c = { PUBLISHED: 'bg-green-100 text-green-800', APPROVED: 'bg-green-100 text-green-800', SUBMITTED: 'bg-blue-100 text-blue-800', IN_REVIEW: 'bg-amber-100 text-amber-800', CHANGES_REQUESTED: 'bg-amber-100 text-amber-800', REJECTED: 'bg-red-100 text-red-800' };
+export default function Badge({ children }) { return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${c[children] || 'bg-slate-100 text-slate-700'}`}>{String(children).replace('_', ' ')}</span>; }
