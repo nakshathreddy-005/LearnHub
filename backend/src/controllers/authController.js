@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { err, wrap } from '../utils/http.js';
 import { audit } from '../services/audit.js';
-const cookie = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 864e5 };
+const cookieOptions = { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' };
+const cookie = { ...cookieOptions, maxAge: 7 * 864e5 };
 const sign = (res, u) => res.cookie('token', jwt.sign({ id: u._id }, process.env.JWT_SECRET, { expiresIn: '7d' }), cookie);
 export const register = wrap(async (req, res) => {
   const { name, email, password } = req.body;
@@ -17,5 +18,5 @@ export const login = wrap(async (req, res) => {
   if (!u.isActive) throw err(403, 'This account is deactivated');
   sign(res, u); await audit(u, 'LOGIN', 'User', u._id); res.json({ user: u });
 });
-export const logout = (req, res) => { res.clearCookie('token', cookie); audit(req.user, 'LOGOUT', 'User', req.user?._id); res.json({ message: 'Signed out' }); };
+export const logout = (req, res) => { res.clearCookie('token', cookieOptions); audit(req.user, 'LOGOUT', 'User', req.user?._id); res.json({ message: 'Signed out' }); };
 export const me = (req, res) => res.json({ user: req.user });

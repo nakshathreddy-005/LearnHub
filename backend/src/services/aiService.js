@@ -18,8 +18,16 @@ const demo = async ({ goal, enrollments, concepts, revisions, pendingQuizzes, as
 const gemini = async (data) => {
   if (!process.env.GEMINI_API_KEY) return demo(data);
   const prompt = `You are a learning coach. Return only valid JSON with keys strengths, weaknesses, path. path is an array of objects with type, step, priority (High/Medium/Low), reason, activity, effort. Personalize from this learner data: ${JSON.stringify({ goal: data.goal, enrollments: data.enrollments, concepts: data.concepts, revisions: data.revisions, pendingQuizzes: data.pendingQuizzes, assignmentPerformance: data.assignmentPerformance })}`;
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-2.0-flash'}:generateContent?key=${process.env.GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-  if (!response.ok) throw new Error(`Gemini request failed with ${response.status}`);
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+  });
+  if (!response.ok) {
+    const details = await response.json().catch(() => ({}));
+    throw new Error(`Gemini ${model} request failed with ${response.status}: ${details.error?.message || response.statusText}`);
+  }
   const result = await response.json();
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
   const parsed = JSON.parse(text.replace(/^```json\s*/i, '').replace(/\s*```$/, ''));

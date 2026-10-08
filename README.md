@@ -8,7 +8,23 @@ No Supabase, SQL, Firebase or required AI key. AI runs in **demo mode** by defau
 2. Backend:  `cd backend && npm install && npm run seed && npm run dev`   (http://localhost:5000)
 3. Frontend: `cd frontend && npm install && npm run dev`                   (http://localhost:5173)
 
-`backend/.env` is pre-created from `.env.example`. **Change `JWT_SECRET`** before deploying.
+`backend/.env` is pre-created from `.env.example`, but it should only contain local/dev values. For deployment, set the real values in your host environment (Render, Railway, Fly.io, Vercel, etc.) and do not commit secrets.
+
+## Deployment environment
+- Backend variables: `PORT` (usually provided by the host), `NODE_ENV=production`, `MONGO_URI`, `JWT_SECRET`, `CLIENT_URL`, `AI_MODE`, `GEMINI_API_KEY`, `GEMINI_MODEL`
+- Frontend required variables: `VITE_API_URL` (for example `https://api.your-domain.com/api` or `/api` when served behind the same origin)
+- Example frontend env file: `frontend/.env.example`
+
+## Production deployment checklist
+1. Set `JWT_SECRET` to a long random value and keep it secret.
+2. Use a MongoDB Atlas connection string in `MONGO_URI`.
+3. Set `CLIENT_URL` to the deployed frontend origin.
+4. Set `VITE_API_URL` to the deployed backend URL including `/api`.
+5. Build frontend with `npm run build` and serve the `dist` folder.
+6. Run backend with `npm start` on the target host.
+7. Configure the frontend host to rewrite unknown paths to `index.html` so React Router routes work after refresh.
+
+For cookie-based authentication, prefer a frontend and backend on the same site (for example, `learnhub.example.com` and `api.learnhub.example.com`). Separate unrelated hostnames can cause browsers to block the auth cookie.
 
 ## Demo accounts (password `Password123!`)
 admin@ / instructor@ / reviewer@ / student@ / mentor@ `learnhub.demo`

@@ -107,8 +107,18 @@ export const updateLesson = wrap(async (req, res) => {
 });
 export const enroll = wrap(async (req, res) => {
   const c = await Course.findOne({ _id: req.params.id, status: 'PUBLISHED' }); if (!c) throw err(404, 'Course not available');
-  if (await Enrollment.exists({ user: req.user._id, course: c._id })) throw err(409, 'You are already enrolled');
-  const enrollment = await Enrollment.create({ user: req.user._id, course: c._id });
+  const enrollmentFilter = { user: req.user._id, course: c._id };
+  const existing = await Enrollment.findOne(enrollmentFilter);
+  if (existing) return res.json({ enrollment: existing, alreadyEnrolled: true });
+  let enrollment;
+  try {
+    enrollment = await Enrollment.create(enrollmentFilter);
+  } catch (error) {
+    if (error.code !== 11000) throw error;
+    enrollment = await Enrollment.findOne(enrollmentFilter);
+    if (!enrollment) throw error;
+    return res.json({ enrollment, alreadyEnrolled: true });
+  }
   await notify(req.user._id, 'ENROLLMENT', `You enrolled in "${c.title}".`, `/learn/${c._id}`);
   res.status(201).json({ enrollment });
 });
